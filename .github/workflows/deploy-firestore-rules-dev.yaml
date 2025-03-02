@@ -1,0 +1,21 @@
+name: Dev Firestore rules
+on: workflow_dispatch
+
+jobs:
+  deploy-dev:
+    name: Deploy Firestore dev rules
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./firebase/develop
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - name: Deploy to Firebase dev
+        uses: w9jds/firebase-action@v2
+        with:
+          args: deploy --only firestore:rules
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_DEV_ID }}
+          PROJECT_PATH: ./firebase/develop
