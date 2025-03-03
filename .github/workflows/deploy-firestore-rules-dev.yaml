@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./firebase/develop
+        working-directory: ./firebase/dev
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
@@ -18,4 +18,4 @@ jobs:
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_DEV_ID }}
-          PROJECT_PATH: ./firebase/develop
+          PROJECT_PATH: ./firebase/dev
