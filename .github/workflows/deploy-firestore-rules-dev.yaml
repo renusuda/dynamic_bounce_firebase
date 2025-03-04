@@ -1,21 +1,50 @@
-name: Dev Firestore rules
-on: workflow_dispatch
+name: Dev Firestore rules 2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  deploy-dev:
-    name: Deploy Firestore dev rules
+  changes:
+    name: Changes
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./firebase/dev
+    timeout-minutes: 15
+    outputs:
+      firestore: ${{ steps.filter.outputs.firestore }}
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-      - name: Deploy to Firebase dev
-        uses: w9jds/firebase-action@master
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: filter
         with:
-          args: deploy --only firestore:rules
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_DEV_ID }}
-          PROJECT_PATH: ./firebase/dev
+          filters: |
+            firestore:
+              - 'firestore.*'
+
+  deploy_firestore:
+    name: Deploy Firestore
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.firestore == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          export_environment_variables: true
+      - name: Deploy to Firestore
+        run: |
+          npm install -g firebase-tools
+          firebase deploy --only firestore --project=bar-project
