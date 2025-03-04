@@ -4,39 +4,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  changes:
-    name: Changes
+  deploy:
+    name: Deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    outputs:
-      firestore: ${{ steps.filter.outputs.firestore }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v2
-      - name: Detect changes
-        uses: dorny/paths-filter@v2
-        id: filter
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
         with:
-          filters: |
-            firestore:
-              - 'firestore.*'
-  deploy_firestore:
-    name: Deploy Firestore
-    needs:
-      - changes
-    if: ${{ needs.changes.outputs.firestore == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    timeout-minutes: 15
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v2
-      - name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v1'
-        with:
-          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.SERVICE_ACCOUNT }}
-          create_credentials_file: true
-          export_environment_variables: true
+          args: deploy --only firestore
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
